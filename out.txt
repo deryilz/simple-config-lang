@@ -1,0 +1,206 @@
+   Compiling simple-config-lang v0.1.0 (/home/derin/code/simple-config-lang)
+warning: enum `TokenValue` is never used
+ --> src/lexer.rs:4:10
+  |
+4 | pub enum TokenValue {
+  |          ^^^^^^^^^^
+  |
+  = note: `TokenValue` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+  = note: `#[warn(dead_code)]` on by default
+
+warning: struct `Token` is never constructed
+  --> src/lexer.rs:22:12
+   |
+22 | pub struct Token {
+   |            ^^^^^
+   |
+   = note: `Token` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: enum `LexerError` is never used
+  --> src/lexer.rs:29:10
+   |
+29 | pub enum LexerError {
+   |          ^^^^^^^^^^
+   |
+   = note: `LexerError` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: type alias `LexerResult` is never used
+  --> src/lexer.rs:35:10
+   |
+35 | pub type LexerResult<T> = Result<T, LexerError>;
+   |          ^^^^^^^^^^^
+
+warning: struct `Lexer` is never constructed
+  --> src/lexer.rs:38:12
+   |
+38 | pub struct Lexer {
+   |            ^^^^^
+   |
+   = note: `Lexer` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: multiple associated items are never used
+   --> src/lexer.rs:44:12
+    |
+43  | impl Lexer {
+    | ---------- associated items in this implementation
+44  |     pub fn from_file(file: &Path) -> Option<Self> {
+    |            ^^^^^^^^^
+...
+51  |     pub fn from_string(string: &str) -> Self {
+    |            ^^^^^^^^^^^
+...
+58  |     pub fn peek(&self) -> LexerResult<Token> {
+    |            ^^^^
+...
+62  |     pub fn next(&mut self) -> LexerResult<Token> {
+    |            ^^^^
+...
+67  |     fn consume_whitespace(&mut self) {
+    |        ^^^^^^^^^^^^^^^^^^
+...
+83  |     fn consume_comment(&mut self) {
+    |        ^^^^^^^^^^^^^^^
+...
+92  |     fn peek_char(&self) -> LexerResult<Token> {
+    |        ^^^^^^^^^
+...
+111 |     fn peek_number(&self) -> LexerResult<Token> {
+    |        ^^^^^^^^^^^
+...
+158 |     fn peek_keyword(&self) -> LexerResult<Token> {
+    |        ^^^^^^^^^^^^
+...
+179 |     fn c(&self) -> char {
+    |        ^
+...
+183 |     fn is_done(&self) -> bool {
+    |        ^^^^^^^
+
+warning: multiple variants are never constructed
+  --> src/lexer.rs:5:5
+   |
+4  | pub enum TokenValue {
+   |          ---------- variants in this enum
+5  |     ParenL,
+   |     ^^^^^^
+6  |     ParenR,
+   |     ^^^^^^
+7  |     SquareL,
+   |     ^^^^^^^
+8  |     SquareR,
+   |     ^^^^^^^
+9  |     CurlyL,
+   |     ^^^^^^
+10 |     CurlyR,
+   |     ^^^^^^
+11 |     Integer(i64),
+   |     ^^^^^^^
+12 |     Float(f64),
+   |     ^^^^^
+13 |     Boolean(bool),
+   |     ^^^^^^^
+14 |     RuleName,
+   |     ^^^^^^^^
+15 |     String(String),
+   |     ^^^^^^
+16 |     None,
+   |     ^^^^
+17 |     Field,
+   |     ^^^^^
+18 |     Comma,
+   |     ^^^^^
+   |
+   = note: `TokenValue` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` on by default
+
+warning: fields `value`, `start`, and `end` are never read
+  --> src/lexer.rs:23:5
+   |
+22 | pub struct Token {
+   |            ----- fields in this struct
+23 |     value: TokenValue,
+   |     ^^^^^
+24 |     start: usize,
+   |     ^^^^^
+25 |     end: usize,
+   |     ^^^
+   |
+   = note: `Token` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: variants `InvalidToken`, `InvalidNumber`, and `UnclosedComment` are never constructed
+  --> src/lexer.rs:30:5
+   |
+29 | pub enum LexerError {
+   |          ---------- variants in this enum
+30 |     InvalidToken,
+   |     ^^^^^^^^^^^^
+31 |     InvalidNumber,
+   |     ^^^^^^^^^^^^^
+32 |     UnclosedComment,
+   |     ^^^^^^^^^^^^^^^
+   |
+   = note: `LexerError` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: fields `chars` and `current_char` are never read
+  --> src/lexer.rs:39:5
+   |
+38 | pub struct Lexer {
+   |            ----- fields in this struct
+39 |     chars: Vec<char>,
+   |     ^^^^^
+40 |     current_char: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `Lexer` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: multiple associated items are never used
+   --> src/lexer.rs:44:12
+    |
+43  | impl Lexer {
+    | ---------- associated items in this implementation
+44  |     pub fn from_file(file: &Path) -> Option<Self> {
+    |            ^^^^^^^^^
+...
+58  |     pub fn peek(&self) -> LexerResult<Token> {
+    |            ^^^^
+...
+67  |     fn consume_whitespace(&mut self) {
+    |        ^^^^^^^^^^^^^^^^^^
+...
+83  |     fn consume_comment(&mut self) {
+    |        ^^^^^^^^^^^^^^^
+...
+92  |     fn peek_char(&self) -> LexerResult<Token> {
+    |        ^^^^^^^^^
+...
+111 |     fn peek_number(&self) -> LexerResult<Token> {
+    |        ^^^^^^^^^^^
+...
+158 |     fn peek_keyword(&self) -> LexerResult<Token> {
+    |        ^^^^^^^^^^^^
+...
+179 |     fn c(&self) -> char {
+    |        ^
+...
+183 |     fn is_done(&self) -> bool {
+    |        ^^^^^^^
+
+warning: `simple-config-lang` (lib) generated 6 warnings
+warning: `simple-config-lang` (lib test) generated 5 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.53s
+     Running unittests src/lib.rs (target/debug/deps/simple_config_lang-a7e291332ea5b2ac)
+
+running 1 test
+thread 'test::hello' panicked at src/lexer.rs:64:9:
+not yet implemented
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test test::hello ... FAILED
+
+failures:
+
+failures:
+    test::hello
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

@@ -1,0 +1,50 @@
+- allows config file to go in config.yd
+- certain hardcoded rules that you can enforce in config-rules.yd (types, int sizes, list lengths, etc)
+- similar to json
+
+supported:
+- lists (not necessarily same element?)
+- objects (probably tuples are overkill)
+- integers
+- floats
+- strings
+- booleans (True or False)
+- None type
+- comments
+
+rules:
+- type of object (or something like "Int or None")
+- list lengths (min, max, or exact)
+- string lengths (min, max, or exact)
+- number ranges (min, max, or exact)
+- possible object fields and default values
+- is-url for strings
+- lowercase, uppercase, snakecase etc rules for strings
+
+syntax:
+
+(
+    symbol "AAPL", // Apple Inc
+    close_price 100.27,
+    past_prices [99.80, 100.17, 110.17],
+    delisted False,
+    address None,
+    financials (
+        eps 0.27,
+        revenue 100_000,
+    )
+)
+
+rules syntax:
+
+(
+    symbol {String, AllCaps, MinLength 1, MaxLength 5},
+    close_price {Float},
+    past_prices {List, All {Float}},
+    delisted {Boolean},
+    address {Either {String, None}},
+    financials {(
+        eps {Float},
+        revenue {Integer}
+    )}
+)
