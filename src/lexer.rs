@@ -16,6 +16,7 @@ pub enum TokenValue {
     None,
     Field,
     Comma,
+    EndOfFile,
 }
 
 #[derive(Debug)]
@@ -25,14 +26,7 @@ pub struct Token {
     end: usize,
 }
 
-#[derive(Debug)]
-pub enum LexerError {
-    InvalidToken,
-    InvalidNumber,
-    UnclosedComment,
-}
-
-pub type LexerResult<T> = Result<T, LexerError>;
+pub type LexerResult<T> = Result<T, ()>;
 
 #[derive(Debug)]
 pub struct Lexer {
@@ -56,36 +50,42 @@ impl Lexer {
     }
 
     pub fn peek(&self) -> LexerResult<Token> {
-        todo!()
+        if self.is_done() {
+            return Ok(Token {
+                value: TokenValue::EndOfFile,
+                start: self.current_char,
+                end: self.current_char,
+            });
+        }
+
+        self.peek_char()
+            .or_else(|_| self.peek_keyword())
+            .or_else(|_| self.peek_number())
+            .or_else(|_| self.peek_field())
+            .or_else(|_| self.peek_string())
     }
 
     pub fn next(&mut self) -> LexerResult<Token> {
-        
-        todo!()
+        self.consume_whitespace();
+
+        let token = self.peek()?;
+        self.current_char = token.end;
+        Ok(token)
     }
 
     fn consume_whitespace(&mut self) {
         while !self.is_done() {
-            let c = self.c();
-
-            if c != '\n' && c != ' ' && c != '\r' && c != '\t' {
-                break;
-            }
-
-            if c == '#' {
-                self.consume_comment();
-            } else {
-                self.current_char += 1;
+            match self.c() {
+                '\n' | ' ' | '\r' | '\t' => self.current_char += 1,
+                '#' => self.consume_comment(),
+                _ => break
             }
         }
     }
 
     fn consume_comment(&mut self) {
-        while !self.is_done() {
+        while !self.is_done() && self.c() != '\n' {
             self.current_char += 1;
-            if self.c() == '\n' {
-                break;
-            }
         }
     }
 
@@ -98,7 +98,7 @@ impl Lexer {
             '{' => TokenValue::CurlyL,
             '}' => TokenValue::CurlyR,
             ',' => TokenValue::Comma,
-            _ => return Err(LexerError::InvalidToken),
+            _ => return Err(()),
         };
 
         Ok(Token {
@@ -118,14 +118,15 @@ impl Lexer {
         while c < self.chars.len() {
             match self.chars[c] {
                 '0'..='9' => seen_digit = true,
+                '_' => {}
                 '-' => {
                     if seen_digit || seen_dot {
-                        return Err(LexerError::InvalidNumber);
+                        return Err(());
                     }
                 }
                 '.' => {
                     if seen_dot {
-                        return Err(LexerError::InvalidNumber);
+                        return Err(());
                     } else {
                         seen_dot = true;
                     }
@@ -136,15 +137,20 @@ impl Lexer {
         }
 
         if !seen_digit {
-            return Err(LexerError::InvalidNumber);
+            return Err(());
         }
 
-        let string: String = self.chars[start..c].iter().collect();
+        let string: String = self.chars[start..c]
+            .iter()
+            .copied()
+            .filter(|c| c != &'_')
+            .collect();
+
         let value = if seen_dot {
-            let f64 = string.parse().map_err(|_| LexerError::InvalidNumber)?;
+            let f64 = string.parse().map_err(|_| ())?;
             TokenValue::Float(f64)
         } else {
-            let i64 = string.parse().map_err(|_| LexerError::InvalidNumber)?;
+            let i64 = string.parse().map_err(|_| ())?;
             TokenValue::Integer(i64)
         };
 
@@ -173,14 +179,60 @@ impl Lexer {
             }
         }
 
-        Err(LexerError::InvalidToken)
+        Err(())
+    }
+
+    fn peek_field(&self) -> LexerResult<Token> {
+        let start = self.current_char;
+
+        match self.chars[start] {
+            'a'..='z' => {}
+            _ => return Err(()),
+        };
+
+        let mut c = start + 1;
+        while c < self.chars.len() {
+            match self.chars[c] {
+                'a'..='z' | '_' => c += 1,
+                ' ' => break,
+                _ => return Err(()),
+            }
+        }
+
+        Ok(Token {
+            value: TokenValue::Field,
+            start,
+            end: c,
+        })
+    }
+
+    // todo: support escaped quotes
+    fn peek_string(&self) -> LexerResult<Token> {
+        let start = self.current_char;
+
+        if self.chars[start] != '"' {
+            return Err(());
+        };
+
+        let mut c = start + 1;
+        while c < self.chars.len() && self.chars[c] != '"' {
+            c += 1;
+        }
+
+        let string: String = self.chars[(start + 1)..c].iter().collect();
+
+        Ok(Token {
+            value: TokenValue::String(string),
+            start,
+            end: c + 1,
+        })
     }
 
     fn c(&self) -> char {
         self.chars[self.current_char]
     }
 
-    fn is_done(&self) -> bool {
+    pub fn is_done(&self) -> bool {
         self.current_char >= self.chars.len()
     }
 }
