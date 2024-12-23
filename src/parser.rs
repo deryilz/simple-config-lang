@@ -1,40 +1,44 @@
-use std::collections::HashMap;
-
 use crate::lexer::Lexer;
 
-pub enum Node {
+use std::fs;
+
+#[derive(Debug)]
+pub enum Value {
     Integer(i64),
     Float(f64),
     String(String),
-    Object(HashMap<String, Node>),
+    Object(Vec<(String, Value)>),
     Boolean(bool),
-    List(Vec<Node>),
-    None
+    List(Vec<Value>),
+    None,
 }
 
-pub enum ParseError {
+#[derive(Debug)]
+pub enum ParseError {}
 
+pub struct Parser<'a> {
+    parens: u8,
+    squares: u8,
+    curlies: u8,
+    chars: &'a [char]
 }
 
-pub type ParseResult<T> = Result<T, ParseError>;
-
-pub struct Parser {
-    lexer: Lexer
-}
-
-impl Parser {
-    fn parse(&mut self) -> ParseResult<Node> {
-        // while !lexer.is_done() {
-        //     match lexer.next() {
-        //         Ok(token) => println!("Token: {:?}", token),
-        //         Err(err) => {
-        //             println!("Error: {:?}", err);
-        //             break;
-        //         },
-        //     }
-        // }
-        todo!()
+impl<'a> Parser<'a> {
+    pub fn new(chars: &[char]) -> Parser {
+        Parser {
+            chars,
+            parens: 0,
+            curlies: 0,
+            squares: 0
+        }
     }
 
-
+    pub fn parse(self) -> Result<Value, ParseError> {
+        let lexer = Lexer::new(self.chars);
+        for token in lexer {
+            println!("{token:?}");
+            // match token {}
+        }
+        todo!()
+    }
 }

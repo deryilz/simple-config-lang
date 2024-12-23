@@ -42,7 +42,7 @@ rules syntax:
     close_price {Float},
     past_prices {List, All {Float}},
     delisted {Boolean},
-    address {Either {String, None}},
+    address {String | None},
     financials {(
         eps {Float},
         revenue {Integer}
