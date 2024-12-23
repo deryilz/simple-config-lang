@@ -1,3 +1,5 @@
+use std::{iter::Peekable, str::CharIndices};
+
 #[derive(Debug)]
 pub enum TokenKind {
     ParenL,
@@ -12,6 +14,7 @@ pub enum TokenKind {
     String,
     Field,
     Comma,
+    Pipe,
     Comment,
     Invalid,
 }
@@ -25,188 +28,140 @@ pub struct Token {
 
 #[derive(Debug, Clone)]
 pub struct Lexer<'a> {
-    pub chars: &'a [char],
-    i: usize,
+    chars: Peekable<CharIndices<'a>>,
+    max_index: usize,
+}
+
+impl<'a> Iterator for Lexer<'a> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.consume()
+    }
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(chars: &[char]) -> Lexer {
-        Lexer { chars, i: 0 }
-    }
-
-    pub fn peek(&self) -> Option<Token> {
-        if self.i >= self.chars.len() {
-            return None;
+    pub fn new(string: &str) -> Lexer {
+        Lexer {
+            chars: string.char_indices().peekable(),
+            max_index: string.len(),
         }
-
-        let token = self
-            .peek_char()
-            .or_else(|| self.peek_number())
-            .or_else(|| self.peek_word())
-            .or_else(|| self.peek_string())
-            .or_else(|| self.peek_comment())
-            .unwrap_or_else(|| Token {
-                kind: TokenKind::Invalid,
-                start: self.i,
-                end: self.chars.len(),
-            });
-
-        Some(token)
     }
 
-    pub fn next(&mut self) -> Option<Token> {
+    pub fn consume(&mut self) -> Option<Token> {
         self.consume_whitespace();
 
-        self.peek().inspect(|token| self.i = token.end)
+        let (start, next) = match self.chars.next() {
+            Some(pair) => pair,
+            None => return None,
+        };
+
+        let kind = match next {
+            '(' => Some(TokenKind::ParenL),
+            ')' => Some(TokenKind::ParenR),
+            '{' => Some(TokenKind::CurlyL),
+            '}' => Some(TokenKind::CurlyR),
+            '[' => Some(TokenKind::SquareL),
+            ']' => Some(TokenKind::SquareR),
+            ',' => Some(TokenKind::Comma),
+            '|' => Some(TokenKind::Pipe),
+            '#' => self.consume_comment(),
+            '"' => self.consume_string(),
+            '0'..='9' | '-' => self.consume_number(false),
+            '.' => self.consume_number(true),
+            'a'..='z' => self.consume_field(),
+            'A'..='Z' => self.consume_keyword(),
+            _ => None,
+        };
+
+        if let Some(kind) = kind {
+            let end = self.chars.peek().map(|it| it.0).unwrap_or(self.max_index);
+            Some(Token { kind, start, end })
+        } else {
+            self.chars = "".char_indices().peekable(); // no more chars will be returned
+            Some(Token {
+                kind: TokenKind::Invalid,
+                start,
+                end: self.max_index,
+            })
+        }
     }
 
     fn consume_whitespace(&mut self) {
-        while self.i < self.chars.len() {
-            match self.chars[self.i] {
-                '\n' | ' ' | '\t' => self.i += 1,
+        loop {
+            match self.chars.peek() {
+                Some((_, ' ' | '\n' | '\t')) => {}
                 _ => break,
             }
+            self.chars.next();
         }
     }
 
-    fn peek_comment(&self) -> Option<Token> {
-        let mut i = self.i;
-
-        if self.chars[i] != '#' {
-            return None;
+    fn consume_comment(&mut self) -> Option<TokenKind> {
+        loop {
+            match self.chars.peek() {
+                Some((_, '\n')) => return Some(TokenKind::Comment),
+                None => return None,
+                _ => {}
+            }
+            self.chars.next();
         }
-
-        while i < self.chars.len() && self.chars[i] != '\n' {
-            i += 1;
-        }
-
-        Some(Token {
-            kind: TokenKind::Comment,
-            start: self.i,
-            end: i,
-        })
     }
 
-    fn peek_char(&self) -> Option<Token> {
-        let kind = match self.chars[self.i] {
-            '(' => TokenKind::ParenL,
-            ')' => TokenKind::ParenR,
-            ']' => TokenKind::SquareL,
-            '[' => TokenKind::SquareR,
-            '{' => TokenKind::CurlyL,
-            '}' => TokenKind::CurlyR,
-            ',' => TokenKind::Comma,
-            _ => return None,
-        };
-
-        Some(Token {
-            kind,
-            start: self.i,
-            end: self.i + 1,
-        })
-    }
-
-    fn peek_number(&self) -> Option<Token> {
-        let mut i = self.i;
-        let mut seen_dot = false;
-        let mut seen_digit = false;
-
-        while i < self.chars.len() {
-            match self.chars[i] {
-                '0'..='9' => seen_digit = true,
-                '_' => {}
-                '-' => {
-                    if seen_digit || seen_dot {
-                        return None;
-                    }
-                }
-                '.' => {
+    fn consume_number(&mut self, mut seen_dot: bool) -> Option<TokenKind> {
+        loop {
+            match self.chars.peek() {
+                Some((_, '0'..='9')) => {}
+                Some((_, '_')) => {}
+                Some((_, '.')) => {
                     if seen_dot {
                         return None;
                     } else {
                         seen_dot = true;
                     }
                 }
+                Some((_, '-')) => {
+                    return None;
+                }
                 _ => break,
             }
-            i += 1;
+            self.chars.next();
         }
 
-        if !seen_digit {
-            return None;
-        }
-
-        let kind = if seen_dot {
-            TokenKind::Float
+        if seen_dot {
+            Some(TokenKind::Float)
         } else {
-            TokenKind::Integer
-        };
-
-        Some(Token {
-            kind,
-            start: self.i,
-            end: i,
-        })
+            Some(TokenKind::Integer)
+        }
     }
 
-    fn peek_word(&self) -> Option<Token> {
-        let mut i = self.i;
-
-        let kind = match self.chars[i] {
-            'a'..='z' => TokenKind::Field,
-            'A'..='Z' => TokenKind::Keyword,
-            _ => return None,
-        };
-
-        i += 1;
-
-        while i < self.chars.len() {
-            match self.chars[i] {
-                'a'..='z' | 'A'..='Z' | '_' | '0'..'9' => i += 1,
-                _ => break,
+    fn consume_keyword(&mut self) -> Option<TokenKind> {
+        loop {
+            match self.chars.peek() {
+                Some((_, 'a'..='z' | 'A'..='Z')) => {}
+                _ => return Some(TokenKind::Keyword),
             }
+            self.chars.next();
         }
+    }
 
-        Some(Token {
-            kind,
-            start: self.i,
-            end: i,
-        })
+    fn consume_field(&mut self) -> Option<TokenKind> {
+        loop {
+            match self.chars.peek() {
+                Some((_, 'a'..='z' | '0'..='9' | '_')) => {}
+                _ => return Some(TokenKind::Field),
+            }
+            self.chars.next();
+        }
     }
 
     // todo: support escaped quotes
-    fn peek_string(&self) -> Option<Token> {
-        let mut i = self.i;
-
-        if self.chars[i] != '"' {
-            return None;
-        };
-
-        i += 1;
-
-        while i < self.chars.len() {
-            if self.chars[i] == '"' {
-                break;
+    fn consume_string(&mut self) -> Option<TokenKind> {
+        loop {
+            match self.chars.next() {
+                Some((_, '"')) => return Some(TokenKind::String),
+                _ => {}
             }
-            i += 1;
         }
-
-        // consume the ending quote
-        i += 1;
-
-        Some(Token {
-            kind: TokenKind::String,
-            start: self.i,
-            end: i,
-        })
-    }
-}
-
-// weird
-impl<'a> Iterator for Lexer<'a> {
-    type Item = Token;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.next()
     }
 }

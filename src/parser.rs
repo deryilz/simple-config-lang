@@ -1,7 +1,5 @@
 use crate::lexer::Lexer;
 
-use std::fs;
-
 #[derive(Debug)]
 pub enum Value {
     Integer(i64),
@@ -20,13 +18,13 @@ pub struct Parser<'a> {
     parens: u8,
     squares: u8,
     curlies: u8,
-    chars: &'a [char]
+    string: &'a str
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(chars: &[char]) -> Parser {
+    pub fn new(string: &str) -> Parser {
         Parser {
-            chars,
+            string,
             parens: 0,
             curlies: 0,
             squares: 0
@@ -34,9 +32,10 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse(self) -> Result<Value, ParseError> {
-        let lexer = Lexer::new(self.chars);
+        let lexer = Lexer::new(self.string);
         for token in lexer {
             println!("{token:?}");
+            println!("Content: {}", &self.string[token.start..token.end]);
             // match token {}
         }
         todo!()

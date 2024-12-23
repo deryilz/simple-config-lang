@@ -8,9 +8,9 @@ mod test {
 
     #[test]
     fn hello() {
-        let chars: Vec<_> = r#"
+        let chars = r#"
         (
-            symbol "AAPL;", # Apple Inc
+            symbol "AAPL💀💀💀;", # Apple Inc
             close_price 100.27,
             past_prices [99.80, 100.17, -110.17],
             delisted False,
@@ -22,9 +22,9 @@ mod test {
                 revenue 100_000,
             )
         )
-        "#.chars().collect();
+        "#;
 
-        let parser = Parser::new(&chars);
+        let parser = Parser::new(chars);
 
         println!("{:?}", parser.parse().unwrap());
     }
