@@ -7,6 +7,7 @@ pub enum Rule {
     Integer,
     Float,
     Boolean,
+    Any,
     List,
     Object(Vec<(String, Rule)>),
     None,

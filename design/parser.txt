@@ -1,0 +1,44 @@
+conceptually, there are two parsing functions:
+parse() -> Result<Value, ParseError>
+parse_rule() -> Result<Rule, RuleParseError>
+
+they both attempt to turn (chunks of) tokens into a tree
+
+NORMAL PARSER:
+if it's a Keyword:
+    "True" and "False" are Booleans
+    "None" is None
+    anything else is an error
+if it's a ParenL:
+    expect 0+ squences of FieldName + Value + Comma followed by ParenR
+    check that FieldName contains no uppercase
+    last comma can be missing
+    to get the Value, just do recursion (?)
+if it's a SquareL:
+    expect 0+ squences of Value + Comma followed by SquareR
+    last comma can be missing
+    to get the Value, just do recursion (?)
+if it's a Comment:
+    ignore
+
+RULE PARSER:
+if it's a CurlyL:
+    if next is a CurlyR:
+        it's an Any rule
+    if next is a Keyword:
+        start building up a vec of rules
+        if next is a Comma:
+            we're parsing a list
+            expect only commas from now on
+        if next is a Pipe:
+            we're parsing a union
+            expect only pipes from now on
+if it's a Keyword:
+    check if it's a rule
+if it's a ParenL:
+    expect 0+ squences of FieldName + Rule? + Comma followed by ParenR
+    check that FieldName contains no uppercase
+    last comma can be missing
+    to get the Value, just do recursion (?)
+if it's a Comment:
+    ignore

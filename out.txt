@@ -1,0 +1,17 @@
+automatically selected target simple-config-lang in package simple-config-lang as it is the only valid target
+   Compiling simple-config-lang v0.1.0 (/home/derin/code/simple-config-lang)
+warning: unused import: `lexer::Lexer`
+  --> src/main.rs:10:13
+   |
+10 | use crate::{lexer::Lexer, parser::Parser};
+   |             ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: `simple-config-lang` (bin "simple-config-lang") generated 1 warning (run `cargo fix --bin "simple-config-lang"` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.36s
+50.938µs
+Object([("address", None), ("close_price", Float(100.27)), ("delisted", Boolean(false)), ("financials", Object([("eps", Float(0.27)), ("revenue", Integer(100000))])), ("past_prices", List([Float(99.8), Float(100.17), Float(110.17)])), ("symbol", String("AAPL💀💀💀💀💀"))])
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.156 MB perf.data (8 samples) ]
+writing flamegraph to "flamegraph.svg"
